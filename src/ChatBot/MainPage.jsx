@@ -1,23 +1,22 @@
 import React, { useState, useRef, useEffect } from "react";
 import { apiDataFetch } from "./Api";
 import { CirclesWithBar } from "react-loader-spinner";
-
+import "./global.css";
 const MainPage = () => {
+  const Api_Key = import.meta.env.VITE_GEMINI_API_KEY;
   const [answer, setAnswer] = useState("");
   const [question, setQuestion] = useState("");
-  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
   const answerRef = useRef(null);
 
   const handleClick = async () => {
-    setError(true);
-    const data = await apiDataFetch(
-      question,
-      "AIzaSyDfCxvkkk0jUk0_dyfaT8Ii3lKS14hiWNI"
-    );
+    if (!question.trim()) return; // ignore empty
+    setLoading(true);
+    const data = await apiDataFetch(question, Api_Key);
     const text =
       data?.candidates?.[0]?.content?.parts?.[0]?.text ||
       "No response from API";
-    setError(false);
+    setLoading(false);
     setAnswer(text);
     setQuestion("");
   };
@@ -31,7 +30,7 @@ const MainPage = () => {
 
   return (
     <div
-      className="d-flex flex-column justify-content-center align-items-center"
+      className="d-flex main-con flex-column justify-content-center align-items-center"
       style={{
         minHeight: "100vh",
         background: "radial-gradient(circle at top, #1e3c72, #2a5298)",
@@ -55,32 +54,28 @@ const MainPage = () => {
 
       {/* Chat Container */}
       <div
-        className="d-flex flex-column shadow-lg rounded-4 p-4 bg-white"
+        className="d-flex flex-column shadow-lg rounded-4 p-3 bg-white w-100"
         style={{
           maxWidth: "500px",
-          width: "100%",
           borderTop: "5px solid #764ba2",
         }}
       >
         {/* Answer Box */}
         <div
           ref={answerRef}
-          className="mb-4 p-3 rounded-4"
+          className="mb-3 p-3 rounded-4 d-flex flex-column gap-2"
           style={{
             minHeight: "150px",
-            maxHeight: "300px",
+            maxHeight: "350px",
             backgroundColor: "#f0f4ff",
             overflowY: "auto",
             whiteSpace: "pre-wrap",
             boxShadow: "inset 0 4px 10px rgba(0,0,0,0.1)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
           }}
         >
           {answer ? (
             <div
-              className="p-3 rounded-3 shadow-sm"
+              className="p-3 shadow-sm"
               style={{
                 background: "linear-gradient(to right, #667eea, #764ba2)",
                 color: "white",
@@ -89,6 +84,7 @@ const MainPage = () => {
                 borderRadius: "20px",
                 fontSize: "0.95rem",
                 lineHeight: "1.4",
+                wordBreak: "break-word",
               }}
             >
               {answer}
@@ -96,8 +92,9 @@ const MainPage = () => {
           ) : (
             <span className="text-muted">Your answers will appear here...</span>
           )}
-          {error && (
-            <p className="text-Secondary">
+
+          {loading && (
+            <div className="d-flex justify-content-start">
               <CirclesWithBar
                 height="25"
                 width="25"
@@ -105,28 +102,25 @@ const MainPage = () => {
                 outerCircleColor="#667eea"
                 innerCircleColor="#667eea"
                 barColor="#667eea"
-                ariaLabel="circles-with-bar-loading"
-                wrapperStyle={{}}
-                wrapperClass=""
+                ariaLabel="loading"
                 visible={true}
               />
-            </p>
+            </div>
           )}
         </div>
 
         {/* Input Group */}
-        <div className="input-group">
+        <div className="d-flex w-100 gap-2">
           <input
             type="text"
-            className="form-control"
+            className="form-control flex-grow-1"
             placeholder="Type your question..."
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleClick()}
             style={{
-              borderTopLeftRadius: "50px",
-              borderBottomLeftRadius: "50px",
-              borderRight: "none",
-              padding: "15px",
+              borderRadius: "50px",
+              padding: "12px 20px",
               boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
             }}
           />
@@ -134,20 +128,16 @@ const MainPage = () => {
             className="btn"
             onClick={handleClick}
             style={{
-              borderTopRightRadius: "50px",
-              borderBottomRightRadius: "50px",
+              borderRadius: "50px",
               background: "linear-gradient(to right, #667eea, #764ba2)",
               color: "white",
               fontWeight: "bold",
-              padding: "0 25px",
+              padding: "0 20px",
+              flexShrink: 0,
               transition: "0.3s",
             }}
-            onMouseOver={(e) => {
-              e.target.style.transform = "scale(1.05)";
-            }}
-            onMouseOut={(e) => {
-              e.target.style.transform = "scale(1)";
-            }}
+            onMouseOver={(e) => (e.target.style.transform = "scale(1.05)")}
+            onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
           >
             Send
           </button>
